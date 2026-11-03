@@ -7,15 +7,19 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon server/server.js",
+    "dev:client": "vite client --config client/vite.config.js",
+    "dev:server": "nodemon server/server.js",
+    "build": "vite build --config client/vite.config.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
     "express": "^5.3.0",
-    "express-session": "^1.19.0",
     "joi": "^18.3.1",
     "method-override": "^3.0.0",
+    "pg": "^8.23.1",
     "vue": "^3.5.44"
   },
   "devDependencies": {
