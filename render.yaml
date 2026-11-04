@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: leadflow-crm
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node server/server.js
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

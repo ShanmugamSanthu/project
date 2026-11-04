@@ -7,24 +7,36 @@ import authRoutes from "./routes/authRoute.js";
 import authenticate from "./middleware/authenticate.js";
 import authorize from "./middleware/authorize.js";
 import leadRoutes from "./routes/leadRoutes.js";
+import crmRoutes from "./routes/crmRoutes.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.resolve(__dirname, "../client/dist");
 
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:5173"
+    origin: process.env.CLIENT_ORIGIN || true
 }));
 
-
-app.use("/org", authRoutes);
-app.use("/enquiry", leadRoutes);
-
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
     res.json({
+        status: "ok",
         message: "LeadFlow CRM API is running"
     });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api", crmRoutes);
+app.use("/enquiry", leadRoutes);
+
+app.use(express.static(clientDist));
+app.get("/{*path}", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/enquiry")) return next();
+    res.sendFile(path.join(clientDist, "index.html"), (error) => error && next());
 });
 
 
@@ -41,4 +53,4 @@ const startServer = async () => {
         console.error("Database connection failed:", error);
     }
 };
-startServer();  
+startServer();

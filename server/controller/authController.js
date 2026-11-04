@@ -1,6 +1,6 @@
 import connectDB from "../config/DBConnect.js";
 import supabaseAdmin from "../config/supabaseAdmin.js";
-import { registerSchema } from "../middleware/validate.js";
+import { loginSchema, registerSchema } from "../middleware/validate.js";
 import crypto from "node:crypto";
 
 const generateSlug = (name) => {
@@ -91,7 +91,7 @@ export const registerOrganization = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Organization registration failed"
+            message: `Organization registration failed: ${error.message}`
         });
     }
 };
@@ -99,7 +99,9 @@ export const registerOrganization = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { error: validationError, value } = loginSchema.validate(req.body);
+        if (validationError) return res.status(400).json({ success: false, message: validationError.message });
+        const { email, password } = value;
 
         // Authenticate user with Supabase
         const { data, error } =
@@ -119,15 +121,15 @@ export const loginUser = async (req, res) => {
 
         // Fetch employee profile
         const profileResult = await connectDB.query(
-            `SELECT id, organization_id, full_name, email, role
-             FROM profiles
-             WHERE id = $1 AND is_active = TRUE`,
+            `SELECT p.id, p.organization_id, p.full_name, p.email, p.role,
+                    o.name AS organization_name, o.slug AS organization_slug
+             FROM profiles p
+             JOIN organizations o ON o.id = p.organization_id
+             WHERE p.id = $1 AND p.is_active = TRUE`,
             [userId]
         );
 
         if (profileResult.rows.length === 0) {
-            await supabaseAdmin.auth.admin.signOut(data.session.access_token);
-
             return res.status(403).json({
                 success: false,
                 message: "User profile not found or inactive"

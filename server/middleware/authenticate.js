@@ -28,9 +28,11 @@ const authenticate = async (req, res, next) => {
 
         // Fetch employee profile
         const profileResult = await connectDB.query(
-            `SELECT id, organization_id, full_name, email, role, is_active
-             FROM profiles
-             WHERE id = $1`,
+            `SELECT p.id, p.organization_id, p.full_name, p.email, p.role, p.is_active,
+                    o.name AS organization_name, o.slug AS organization_slug
+             FROM profiles p
+             JOIN organizations o ON o.id = p.organization_id
+             WHERE p.id = $1`,
             [data.user.id]
         );
 
